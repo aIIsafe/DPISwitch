@@ -1,7 +1,5 @@
-# project.yml
-# DPISwitch — xcodegen spec
-# Генерирует Xcode project: `xcodegen generate`
-# Docs: https://github.com/yonaskolb/XcodeGen
+# project.yml — xcodegen spec для DPISwitch
+# Генерация: xcodegen generate
 
 name: DPISwitch
 
@@ -11,17 +9,6 @@ options:
     iOS: "17.0"
   createIntermediateGroups: true
   defaultConfig: Debug
-  xcodeVersion: "16.0"
-
-settings:
-  base:
-    SWIFT_VERSION: "5.9"
-    ENABLE_PREVIEWS: YES
-    DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
-
-configs:
-  Debug: debug
-  Release: release
 
 packages:
   SwByeDPI:
@@ -34,18 +21,9 @@ targets:
     platform: iOS
     deploymentTarget: "17.0"
 
-    # Все Swift файлы рекурсивно из папки DPISwitch/
     sources:
       - path: DPISwitch
-        excludes:
-          - "**/*.plist"
-          - "Info.plist"
-          - "Resources/Assets.xcassets"
-        type: group
-      # Assets отдельно (ресурсы)
-      - path: DPISwitch/Resources/Assets.xcassets
 
-    # Info.plist
     info:
       path: DPISwitch/Info.plist
       properties:
@@ -55,15 +33,13 @@ targets:
         LSRequiresIPhoneOS: true
         UILaunchScreen: {}
         UIUserInterfaceStyle: Dark
-        UIRequiresFullScreen: true
-        NSLocalNetworkUsageDescription: "DPI Switch uses local network access to run a SOCKS5 proxy server for DPI bypass."
+        NSLocalNetworkUsageDescription: "DPI Switch needs local network to run a SOCKS5 proxy."
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
           UISceneConfigurations: {}
 
-    # Настройки сборки
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.dpiswitch.app
@@ -75,30 +51,13 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         ENABLE_BITCODE: NO
-        VALIDATE_PRODUCT: YES
-      configs:
-        Debug:
-          CODE_SIGNING_ALLOWED: YES
-          CODE_SIGNING_REQUIRED: NO
-          CODE_SIGN_IDENTITY: ""
-        Release:
-          CODE_SIGNING_ALLOWED: NO
-          CODE_SIGNING_REQUIRED: NO
-          CODE_SIGN_IDENTITY: ""
+        ENABLE_PREVIEWS: YES
+        CODE_SIGNING_ALLOWED: NO
+        CODE_SIGNING_REQUIRED: NO
+        CODE_SIGN_IDENTITY: ""
 
-    # SPM зависимости
     dependencies:
       - package: SwByeDPI
         product: SwByeDPI
       - package: SwByeDPI
         product: ByeDPIKit
-
-    # Фазы сборки
-    preBuildScripts:
-      - name: "SwiftLint (optional)"
-        script: |
-          if which swiftlint > /dev/null; then
-            swiftlint --quiet
-          fi
-        basedOnDependencyAnalysis: false
-        showEnvVars: false
