@@ -1,0 +1,130 @@
+# .github/workflows/build.yml
+# DPISwitch — автоматическая сборка unsigned IPA
+#
+# Запускается при:
+# - push в master/main
+# - ручном запуске (workflow_dispatch) — кнопка Run workflow на GitHub
+#
+# Результат: DPISwitch.ipa в разделе Artifacts (скачать → поставить через AltStore)
+
+name: Build IPA
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  workflow_dispatch:
+    inputs:
+      build_note:
+        description: "Build note (optional)"
+        required: false
+        default: "Manual build"
+
+# Только один активный запуск одновременно
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build Unsigned IPA
+    runs-on: macos-15
+
+    steps:
+      # 1. Клонируем репозиторий
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2. Выбираем Xcode 16
+      - name: Select Xcode 16
+        run: |
+          sudo xcode-select -s /Applications/Xcode_16.2.app
+          xcodebuild -version
+
+      # 3. Устанавливаем xcodegen
+      - name: Install xcodegen
+        run: |
+          brew install xcodegen
+          xcodegen version
+
+      # 4. Генерируем .xcodeproj из project.yml
+      - name: Generate Xcode project
+        run: xcodegen generate --spec project.yml
+
+      # 5. Кеш SPM пакетов (ускоряет сборку)
+      - name: Cache SPM packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Developer/Xcode/DerivedData
+            .build
+          key: spm-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            spm-
+
+      # 6. Разрешаем зависимости SPM
+      - name: Resolve SPM dependencies
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project DPISwitch.xcodeproj \
+            -scheme DPISwitch \
+            -clonedSourcePackagesDirPath .spm-cache
+
+      # 7. Архивируем без подписи
+      - name: Archive (unsigned)
+        run: |
+          xcodebuild archive \
+            -project DPISwitch.xcodeproj \
+            -scheme DPISwitch \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath "${{ runner.temp }}/DPISwitch.xcarchive" \
+            -clonedSourcePackagesDirPath .spm-cache \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            AD_HOC_CODE_SIGNING_ALLOWED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            | xcpretty || true
+
+      # 8. Упаковываем в IPA
+      - name: Package IPA
+        run: |
+          APP_PATH="${{ runner.temp }}/DPISwitch.xcarchive/Products/Applications/DPISwitch.app"
+
+          # Проверяем что .app существует
+          if [ ! -d "$APP_PATH" ]; then
+            echo "ERROR: .app not found at $APP_PATH"
+            ls "${{ runner.temp }}/DPISwitch.xcarchive/Products/Applications/" || true
+            exit 1
+          fi
+
+          # Создаём IPA структуру: Payload/DPISwitch.app → zip → .ipa
+          mkdir -p "${{ runner.temp }}/ipa/Payload"
+          cp -r "$APP_PATH" "${{ runner.temp }}/ipa/Payload/"
+          cd "${{ runner.temp }}/ipa"
+          zip -r "${{ runner.temp }}/DPISwitch.ipa" Payload
+
+          echo "IPA created successfully"
+          ls -lh "${{ runner.temp }}/DPISwitch.ipa"
+
+      # 9. Загружаем IPA как артефакт
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DPISwitch-unsigned-${{ github.sha }}
+          path: ${{ runner.temp }}/DPISwitch.ipa
+          retention-days: 30
+
+      # 10. Summary
+      - name: Build summary
+        if: always()
+        run: |
+          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **iOS Target:** 17.0+" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Installation" >> $GITHUB_STEP_SUMMARY
+          echo "1. Download **DPISwitch.ipa** from Artifacts above" >> $GITHUB_STEP_SUMMARY
+          echo "2. Install via **AltStore**, **SideStore**, or **TrollStore**" >> $GITHUB_STEP_SUMMARY

@@ -1,57 +1,67 @@
 // Color+DPISwitch.swift
 // DPISwitch
 //
-// Цветовая палитра приложения.
-// Все цвета определены здесь — изменение дизайна в одном месте.
+// Цветовая система приложения.
+// Все цвета — в одном месте.
 
 import SwiftUI
 
 extension Color {
 
-    // MARK: - Фоны
+    // MARK: - Фон
 
-    /// Основной фон приложения (#0D0D0D)
-    static let appBackground = Color(red: 0.051, green: 0.051, blue: 0.051)
+    static let appBackground = Color(red: 0.02, green: 0.02, blue: 0.07)
+    static let appSurface    = Color(red: 0.08, green: 0.08, blue: 0.13)
 
-    /// Вторичный фон (карточки, секции)
-    static let appSurface = Color(red: 0.11, green: 0.11, blue: 0.118)
+    // MARK: - Состояния кнопки
 
-    // MARK: - Кнопка подключения
+    /// Disconnected — приглушённый серо-синий
+    static let buttonInactive  = Color(red: 0.22, green: 0.23, blue: 0.30)
 
-    /// Цвет кнопки в состоянии Disconnected (#3A3A3C)
-    static let buttonInactive = Color(red: 0.227, green: 0.227, blue: 0.235)
+    /// Connected — Apple Blue / Electric Blue
+    static let buttonActive    = Color(red: 0.0,  green: 0.48, blue: 1.0)
 
-    /// Цвет кнопки в состоянии Connected (#007AFF — Apple Blue)
-    static let buttonActive = Color(red: 0.0, green: 0.478, blue: 1.0)
+    /// Connecting — переходный
+    static let buttonConnecting = Color(red: 0.0, green: 0.30, blue: 0.75)
 
-    /// Цвет кнопки в состоянии Connecting (промежуточный)
-    static let buttonConnecting = Color(red: 0.0, green: 0.3, blue: 0.7)
-
-    /// Цвет кнопки в состоянии Error (#FF3B30)
-    static let buttonError = Color(red: 1.0, green: 0.231, blue: 0.188)
+    /// Error — Apple Red
+    static let buttonError     = Color(red: 1.0,  green: 0.23, blue: 0.19)
 
     // MARK: - Текст
 
-    /// Основной текст
-    static let textPrimary = Color.white
+    static let textPrimary   = Color.white
+    static let textSecondary = Color(red: 0.60, green: 0.62, blue: 0.70)
+    static let textTertiary  = Color(red: 0.40, green: 0.42, blue: 0.50)
 
-    /// Вторичный текст (статус, подписи)
-    static let textSecondary = Color(red: 0.557, green: 0.557, blue: 0.576)
+    // MARK: - Separator
 
-    // MARK: - Разделители
+    static let appSeparator = Color(red: 0.18, green: 0.19, blue: 0.25)
 
-    /// Цвет разделителя в списках
-    static let appSeparator = Color(red: 0.18, green: 0.18, blue: 0.19)
+    // MARK: - Preset иконки
+
+    static let youtubeRed  = Color(red: 1.0,  green: 0.18, blue: 0.18)
+    static let tiktokCyan  = Color(red: 0.0,  green: 0.85, blue: 0.80)
+    static let discordBlue = Color(red: 0.35, green: 0.40, blue: 0.95)
 
     // MARK: - Вспомогательный метод
 
-    /// Возвращает цвет кнопки для данного состояния
+    /// Цвет кнопки для данного состояния соединения
     static func buttonColor(for state: ConnectionState) -> Color {
         switch state {
         case .disconnected: return .buttonInactive
         case .connecting:   return .buttonConnecting
         case .connected:    return .buttonActive
         case .error:        return .buttonError
+        }
+    }
+
+    /// Accent цвет пресета по его ID
+    static func presetAccent(for presetID: String) -> Color {
+        switch presetID {
+        case "youtube":  return .youtubeRed
+        case "tiktok":   return .tiktokCyan
+        case "discord":  return .discordBlue
+        default:         return .buttonActive
         }
     }
 }

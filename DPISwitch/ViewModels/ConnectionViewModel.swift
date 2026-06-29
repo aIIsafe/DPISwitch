@@ -1,55 +1,48 @@
 // ConnectionViewModel.swift
 // DPISwitch
 //
-// Главный ViewModel — управляет жизненным циклом подключения.
-// Связывает UI (HomeView) с ByeDPIService и SettingsViewModel.
-//
-// Совместимость: iOS 15+ / Swift 5.5 / Xcode 13
+// Управляет жизненным циклом подключения.
+// iOS 17: @Observable вместо ObservableObject — SwiftUI отслеживает
+// только те свойства, которые реально используются во view.
 
 import Foundation
-import Combine
+import Observation
 import SwByeDPI
 
-final class ConnectionViewModel: ObservableObject {
+@Observable
+final class ConnectionViewModel {
 
-    // MARK: - Published свойства
+    // MARK: - Состояние
 
-    /// Текущее состояние соединения
-    @Published private(set) var connectionState: ConnectionState = .disconnected
-
-    /// Адрес прокси для отображения (127.0.0.1:10800)
-    @Published private(set) var proxyAddress: String = "127.0.0.1:10800"
-
-    /// Сообщение об ошибке (показывается в алёрте)
-    @Published var errorMessage: String?
+    private(set) var connectionState: ConnectionState = .disconnected
+    private(set) var proxyAddress: String = "127.0.0.1:10800"
+    var errorMessage: String?
 
     // MARK: - Зависимости
 
     private let service: ByeDPIService
-    private let settingsViewModel: SettingsViewModel
+    private let settingsVM: SettingsViewModel
     private let defaults: UserDefaults
 
     // MARK: - Инициализация
 
     init(
         service: ByeDPIService = .shared,
-        settingsViewModel: SettingsViewModel,
+        settingsVM: SettingsViewModel,
         defaults: UserDefaults = .standard
     ) {
         self.service = service
-        self.settingsViewModel = settingsViewModel
+        self.settingsVM = settingsVM
         self.defaults = defaults
 
-        // Синхронизируем состояние при запуске (мог ли прокси остаться запущенным)
         if service.isRunning {
             connectionState = .connected
             proxyAddress = service.proxyAddress
         }
     }
 
-    // MARK: - Основное действие — переключение
+    // MARK: - Публичное API
 
-    /// Главное действие кнопки: подключить или отключить
     func toggleConnection() {
         switch connectionState {
         case .disconnected, .error:
@@ -57,7 +50,6 @@ final class ConnectionViewModel: ObservableObject {
         case .connected:
             disconnect()
         case .connecting:
-            // Игнорируем нажатие во время переходного состояния
             break
         }
     }
@@ -67,12 +59,11 @@ final class ConnectionViewModel: ObservableObject {
     private func connect() {
         connectionState = .connecting
 
-        // Собираем конфигурацию из настроек пользователя
         let config = SBDConfig(
             listenIP: defaults.proxyListenIP,
             listenPort: defaults.proxyListenPort,
             bufSize: defaults.proxyBufSize,
-            commandArgs: settingsViewModel.combinedCmdArgs
+            commandArgs: settingsVM.combinedCmdArgs
         )
 
         service.start(with: config) { [weak self] result in
@@ -81,12 +72,9 @@ final class ConnectionViewModel: ObservableObject {
             case .success:
                 self.connectionState = .connected
                 self.proxyAddress = self.service.proxyAddress
-
             case .alreadyRunning:
-                // Прокси уже запущен — считаем connected
                 self.connectionState = .connected
                 self.proxyAddress = self.service.proxyAddress
-
             case .failure(let message):
                 self.connectionState = .error(message)
                 self.errorMessage = message
