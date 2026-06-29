@@ -1,8 +1,9 @@
 // View+GlassEffect.swift
 // DPISwitch
 //
-// Liquid Glass эффект — реализован через ultraThinMaterial + specular highlights.
-// Работает на iOS 17+. Выглядит как родной Apple glass из visionOS/iOS 26.
+// Liquid Glass эффект.
+// iOS 26+: нативный .glassBackgroundEffect() от Apple
+// iOS 17–25: кастомный ultraThinMaterial + specular highlights
 
 import SwiftUI
 
@@ -107,19 +108,31 @@ struct CircleGlassModifier: ViewModifier {
 
 extension View {
 
-    /// Liquid Glass карточка — для списков и секций
+    /// Liquid Glass карточка.
+    /// iOS 26+: нативный Apple glass.
+    /// iOS 17–25: кастомный material + specular.
     func liquidGlass(
         cornerRadius: CGFloat = 20,
         tintColor: Color = .blue,
         tintOpacity: Double = 0.04,
         strokeOpacity: Double = 0.25
     ) -> some View {
-        modifier(LiquidGlassModifier(
-            cornerRadius: cornerRadius,
-            tintColor: tintColor,
-            tintOpacity: tintOpacity,
-            strokeOpacity: strokeOpacity
-        ))
+        Group {
+            if #available(iOS 26, *) {
+                // Нативный Liquid Glass от Apple
+                self
+                    .background(.regularMaterial)
+                    .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            } else {
+                // Кастомная реализация для iOS 17–25
+                self.modifier(LiquidGlassModifier(
+                    cornerRadius: cornerRadius,
+                    tintColor: tintColor,
+                    tintOpacity: tintOpacity,
+                    strokeOpacity: strokeOpacity
+                ))
+            }
+        }
     }
 
     /// Liquid Glass круг — для кнопки подключения
@@ -128,10 +141,19 @@ extension View {
         glowRadius: CGFloat = 0,
         glowOpacity: Double = 0
     ) -> some View {
-        modifier(CircleGlassModifier(
-            tintColor: tintColor,
-            glowRadius: glowRadius,
-            glowOpacity: glowOpacity
-        ))
+        Group {
+            if #available(iOS 26, *) {
+                self
+                    .glassBackgroundEffect(in: Circle())
+                    .shadow(color: tintColor.opacity(glowOpacity), radius: glowRadius)
+                    .shadow(color: tintColor.opacity(glowOpacity * 0.5), radius: glowRadius * 2)
+            } else {
+                self.modifier(CircleGlassModifier(
+                    tintColor: tintColor,
+                    glowRadius: glowRadius,
+                    glowOpacity: glowOpacity
+                ))
+            }
+        }
     }
 }
