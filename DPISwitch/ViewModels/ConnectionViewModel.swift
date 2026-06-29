@@ -3,12 +3,13 @@
 //
 // Главный ViewModel — управляет жизненным циклом подключения.
 // Связывает UI (HomeView) с ByeDPIService и SettingsViewModel.
+//
+// Совместимость: iOS 15+ / Swift 5.5 / Xcode 13
 
 import Foundation
 import Combine
 import SwByeDPI
 
-@MainActor
 final class ConnectionViewModel: ObservableObject {
 
     // MARK: - Published свойства

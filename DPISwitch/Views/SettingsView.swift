@@ -3,6 +3,8 @@
 //
 // Экран настроек — переключатели для сервисов.
 // Каждый тоггл включает/выключает пресет DPI-обхода.
+//
+// Совместимость: iOS 15+ (Xcode 13 / Big Sur)
 
 import SwiftUI
 
@@ -19,7 +21,7 @@ struct SettingsView: View {
     // MARK: - Тело
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             ZStack {
                 Color.appBackground
                     .ignoresSafeArea()
@@ -50,6 +52,7 @@ struct SettingsView: View {
                 }
             }
         }
+        .navigationViewStyle(.stack)
         .preferredColorScheme(.dark)
     }
 
@@ -163,6 +166,9 @@ private struct PresetToggleRow: View {
 
 // MARK: - Preview
 
-#Preview {
-    SettingsView(viewModel: SettingsViewModel())
+struct SettingsView_Previews: PreviewProvider {
+    static var previews: some View {
+        SettingsView(viewModel: SettingsViewModel())
+            .preferredColorScheme(.dark)
+    }
 }

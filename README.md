@@ -7,10 +7,13 @@
 
 ## Требования
 
-- Mac с macOS 12.0+ (Monterey или новее)
-- Xcode 15.0+
-- iPhone с iOS 16.0+
+- Mac с macOS **Big Sur 11.0+** (Monterey тоже подойдёт)
+- **Xcode 13.2.1** (последний для Big Sur)
+- iPhone с iOS **15.0+**
 - Apple ID (бесплатного достаточно для запуска на своём устройстве)
+
+> **iMac Late 2013**: перед установкой Xcode обнови macOS Catalina → Big Sur  
+> (бесплатно через App Store, данные сохраняются)
 
 ---
 

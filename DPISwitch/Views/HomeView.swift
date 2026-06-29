@@ -3,6 +3,8 @@
 //
 // Главный экран приложения.
 // Большая круглая кнопка по центру + кнопка Settings внизу.
+//
+// Совместимость: iOS 15+ (Xcode 13 / Big Sur)
 
 import SwiftUI
 
@@ -32,7 +34,8 @@ struct HomeView: View {
     // MARK: - Тело
 
     var body: some View {
-        NavigationStack {
+        // NavigationView для совместимости с iOS 15 / Xcode 13
+        NavigationView {
             ZStack {
                 // Фон
                 Color.appBackground
@@ -56,10 +59,13 @@ struct HomeView: View {
                 }
             }
             .navigationBarHidden(true)
-            .alert("Error", isPresented: Binding(
-                get: { connectionVM.errorMessage != nil },
-                set: { if !$0 { connectionVM.errorMessage = nil } }
-            )) {
+            .alert(
+                "Error",
+                isPresented: Binding(
+                    get: { connectionVM.errorMessage != nil },
+                    set: { if !$0 { connectionVM.errorMessage = nil } }
+                )
+            ) {
                 Button("OK", role: .cancel) {
                     connectionVM.errorMessage = nil
                 }
@@ -70,6 +76,7 @@ struct HomeView: View {
                 SettingsView(viewModel: settingsVM)
             }
         }
+        .navigationViewStyle(.stack)
     }
 
     // MARK: - Компоненты
@@ -126,7 +133,7 @@ struct HomeView: View {
                 Text(connectionVM.proxyAddress)
                     .font(.caption)
                     .foregroundColor(.textSecondary)
-                    .fontDesign(.monospaced)
+                    .font(.system(.caption, design: .monospaced))
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
@@ -171,6 +178,10 @@ struct HomeView: View {
 
 // MARK: - Preview
 
-#Preview {
-    HomeView()
+// Xcode 13 использует PreviewProvider вместо #Preview
+struct HomeView_Previews: PreviewProvider {
+    static var previews: some View {
+        HomeView()
+            .preferredColorScheme(.dark)
+    }
 }

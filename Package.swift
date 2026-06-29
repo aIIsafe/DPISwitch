@@ -11,7 +11,7 @@ import PackageDescription
 let package = Package(
     name: "DPISwitch",
     platforms: [
-        .iOS(.v16)
+        .iOS(.v15)   // Xcode 13 / macOS Big Sur / iMac 2013
     ],
     dependencies: [
         // SwByeDPI — Swift wrapper для byedpi (ByeDPIKit + SwByeDPI модули)
